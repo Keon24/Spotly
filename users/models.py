@@ -7,10 +7,10 @@ class User (AbstractUser):
     password = models.CharField(max_length = 50)
     first_name = models.CharField(max_length =50)
     last_name = models.CharField(max_length =50)
-    password = models.CharField(max_length = 255)
+
     
     USERNAME_FIELD = "email"
-    REQUIRE_FIELDS = ["first_name","last_name"]
+    REQUIRED_FIELDS = ["first_name","last_name"]
     
     def save(self, *args, **kwargs):
         if not self.pk:
