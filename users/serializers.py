@@ -12,7 +12,8 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id", "email", "username", "first_name", "last_name"]
 
 # Register serializer to handle user creation
-class RegisterSerializer(serializers.ModelSerializers):
+class RegisterSerializer(serializers.ModelSerializer):
+
     password = serializers.CharField(write_only=True)
 
     class Meta:
