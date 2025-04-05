@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.tokens import RefreshToken
 
 # Get custom user model
@@ -14,12 +15,18 @@ class UserSerializer(serializers.ModelSerializer):
 # Register serializer to handle user creation
 class RegisterSerializer(serializers.ModelSerializer):
 
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True,validate=validate_password)
+    password2 = serializers.CharField(write_only =True)
 
     class Meta:
         model = User
         fields = ["id", "email", "username", "first_name", "last_name", "password"]
-
+        
+    
+    def validate(self,attrs):
+       if attrs["password"] != attrs["password2"]:
+           raise serializers.ValidationError({"message:","passswords do not match"})
+       return attrs
     # Define a function to create and hash the password
     def create(self, validated_data):
         password = validated_data.pop("password")
