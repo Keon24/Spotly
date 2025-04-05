@@ -43,16 +43,26 @@ class LoginSerializer(serializers.Serializer):
     # Validate and authenticate the user
     def validate(self, data):
         email = data.get("email")
-        password = data.get("password")
-        user = User.objects.filter(email=email).first()
-
-        if user and user.check_password(password):
-            refresh = RefreshToken.for_user(user)
+        password = data.get("password")      
+        try:   
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Invalid email or password")
+    
+        if not user.check_password(password):
+            raise serializers.ValidationError("invalid username or password")
+        
+        if not user.is_active:
+            raise serializers.ValidationError("kicked out for inactivity")
+        
+        
+        refresh = RefreshToken.for_user(user)
             # Return user details and JWT tokens
-            return {
-                "user": UserSerializer(user).data,  # Fixed user.data issue
-                "access_token": str(refresh.access_token),
-                "token": str(refresh),
-            }
+        return {
+       "user": UserSerializer(user).data,  # Fixed user.data issue
+       "access_token": str(refresh.access_token),
+       "token": str(refresh),
+       
+        }
 
-        raise serializers.ValidationError("Invalid email or password")
+    
