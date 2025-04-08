@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
-
+# note similiar to nodejs routing
 def home(request):
     return JsonResponse({"message":"Welcome home"})
 
