@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.tokens import RefreshToken
 
+# note similar to nodejs validator
 # Get custom user model
 User = get_user_model()
 
@@ -14,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 # Register serializer to handle user creation
 class RegisterSerializer(serializers.ModelSerializer):
-
+    # User is required to have matching passwords 
     password = serializers.CharField(write_only=True,validate=validate_password)
     password2 = serializers.CharField(write_only =True)
 
@@ -22,7 +23,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "email", "username", "first_name", "last_name", "password"]
         
-    
+    # Here we take the data form JSON and compare passwords to see if they match
     def validate(self,attrs):
        if attrs["password"] != attrs["password2"]:
            raise serializers.ValidationError({"message:","passswords do not match"})

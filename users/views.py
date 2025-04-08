@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response 
 from .serializers import RegisterSerializer, LoginSerializer 
 # IMPLEMENT APPLICATION SECURITY PRACTICES
-
+# Note similiar nodejs routes
 #create a class registerview that takes in api
 class RegisterView(APIView):
 # create a function that makes a post request and pass the incoming data to the serializer 
