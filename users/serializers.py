@@ -16,7 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
 # Register serializer to handle user creation
 class RegisterSerializer(serializers.ModelSerializer):
     # User is required to have matching passwords 
-    password = serializers.CharField(write_only=True,validate=validate_password)
+    password = serializers.CharField(write_only=True,validators=[validate_password])
     password2 = serializers.CharField(write_only =True)
 
     class Meta:

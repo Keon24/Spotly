@@ -1,7 +1,8 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response 
-from .serializers import RegisterSerializer, LoginSerializer 
+from rest_framework.permissions import IsAuthenticated
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 # IMPLEMENT APPLICATION SECURITY PRACTICES
 # Note similiar nodejs routes
 #create a class registerview that takes in api
@@ -27,5 +28,10 @@ class LoginView(APIView):
         return Response(serializer.errors,status=status.HTTP_401_UNAUTHORIZED)
             
                        
-
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self,request):
+        user = request.user
+        data = UserSerializer(user).data
+        return Response(data)
 

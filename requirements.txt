@@ -3,3 +3,7 @@ djangorestframework
 psycopg2-binary
 djangorestframework
 djangorestframework-simplejwt
+dj-rest-auth
+django-allauth
+social-auth-app-django
+
