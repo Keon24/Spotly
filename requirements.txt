@@ -6,4 +6,4 @@ djangorestframework-simplejwt
 dj-rest-auth
 django-allauth
 social-auth-app-django
-
+requests
