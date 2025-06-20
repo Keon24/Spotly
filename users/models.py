@@ -7,7 +7,7 @@ class User (AbstractUser):
     password = models.CharField(max_length =255)
     first_name = models.CharField(max_length =50)
     last_name = models.CharField(max_length =50)
-
+    is_admin = models.BooleanField(default=False)
     
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name","last_name"]

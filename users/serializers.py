@@ -21,7 +21,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "username", "first_name", "last_name", "password"]
+        fields = ["id", "email", "username", "first_name", "last_name", "password","password2"]
         
     # Here we take the data form JSON and compare passwords to see if they match
     def validate(self,attrs):
@@ -30,6 +30,7 @@ class RegisterSerializer(serializers.ModelSerializer):
        return attrs
     # Define a function to create and hash the password
     def create(self, validated_data):
+        validated_data.pop("password2")
         password = validated_data.pop("password")
         user = User.objects.create(**validated_data)
         user.set_password(password)  # Corrected method

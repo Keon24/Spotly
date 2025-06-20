@@ -3,10 +3,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response 
 from rest_framework.permissions import IsAuthenticated
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+from rest_framework.permissions import AllowAny
 # IMPLEMENT APPLICATION SECURITY PRACTICES
 # Note similiar nodejs routes
 #create a class registerview that takes in api
 class RegisterView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
 # create a function that makes a post request and pass the incoming data to the serializer 
     def post (self, request):
         serializer = RegisterSerializer( data=request.data)
@@ -21,6 +24,8 @@ class RegisterView(APIView):
             
             
 class LoginView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
     def post(self,request):
         serializer = LoginSerializer(data= request.data)
         if serializer.is_valid():
