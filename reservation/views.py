@@ -10,7 +10,8 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.utils import provided_date
 from django.utils import parse_date
-
+import logging
+logger = logging.getlogger*(__name__)
 
 class ReservationLotView(APIView):
     def post(self,request):
@@ -29,18 +30,21 @@ class ReservationLotView(APIView):
                 reserve_date=reserve_date,
                 soft_delete__isnull=True
                 ).exist()
+                    logger.warning(f"User{request.user} attempt to double book lot {lot.id} for {reserve_date}")
                 if exist:
                     return Response(
                         {"message":"That lot is already reserved at this time"},status=status.HTTP_409_CONFLICT
                 )
-                reserve_lot.save()
+                reserve_lot.save(user=request.user)
+                logger.info(f"User {request.user} reserve lot {lot.id} for {reserve_date}")
                 return Response(
                 {'Message:',"Parking Reservation Confirmed","data", reserve_lot.data},
                 status=status.HTTP_201_CREATED
             )
             except  Exception as e:
-
-             return Response(
+                logging.error(f'Reservation failed for user{request.user}:{str(e)}')
+                logger.warning(f"Invalid reservation by user{request.user}:{reserve_lot.error}")
+            return Response(
                 {'message': 'Reservation Failed', "error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
 )
