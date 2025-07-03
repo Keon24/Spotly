@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/users/',include('users.urls')),
     path('auth/',include('users.authentication.urls')),
     path('api/reservations/', include('reservation.urls')),
+    path('api/parking/', include('parking.urls')),
 
     path("", home)
 ]
