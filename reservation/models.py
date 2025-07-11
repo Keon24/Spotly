@@ -6,9 +6,9 @@ from .models import get_user_model
 class ReservationLot(models.Model):
     space = models.ForeignKey(ParkingSpace,on_delete=models.CASCADE)
     user = models. ForeignKey(get_user_model(),on_delete=models.CASCADE)
-    ticket_code = models.CharField(max_length = 255, unique=True)
+    ticket_code = models.CharField(max_length = 255, unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    reserve_date = models.DateTimeField(auto_now_add=True)
+    reserve_date = models.DateTimeField()
     soft_delete = models.DateTimeField(auto_now_add=True)
     is_occupied = models.BooleanField(default=False)
     
