@@ -17,24 +17,24 @@ logger = logging.getLogger(__name__)
 
 class ReservationLotView(APIView):
     def post(self, request):
-        reserve_lot = ReservationSerializer(data=request.data)
+        reserve_lot = ReservationSerializer(data=request.data, context={'request':request})
         if reserve_lot.is_valid():
-            lot = reserve_lot.validated_data.get('lot')
+            space = reserve_lot.validated_data.get('space')
             reserve_date = reserve_lot.validated_data.get('reserve_date')
             
             try:    
                 # lock row
                 with transaction.atomic():
-                    ReservationLot.objects.select_for_update().filter(lot=lot)
+                    ReservationLot.objects.select_for_update().filter(space=space)
                     
                     # Check if theres already a reservation
                     exist = ReservationLot.objects.filter(
-                        lot=lot,
+                        space=space,
                         reserve_date=reserve_date,
                         soft_delete__isnull=True
                     ).exists()
                     
-                    logger.warning(f"User{request.user} attempt to double book lot {lot.id} for {reserve_date}")
+                    logger.warning(f"User{request.user} attempt to double book lot {space.id} for {reserve_date}")
                     
                     if exist:
                         return Response(
@@ -43,7 +43,7 @@ class ReservationLotView(APIView):
                         )
 
                     reserve_lot.save(user=request.user)
-                    logger.info(f"User {request.user} reserve lot {lot.id} for {reserve_date}")
+                    logger.info(f"User {request.user} reserve lot {space.id} for {reserve_date}")
                     return Response(
                         {
                             "Message": "Parking Reservation Confirmed",

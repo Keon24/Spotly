@@ -6,7 +6,7 @@ class ReservationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReservationLot
         fields = ['space', 'reserve_date']  # correct field names
-        read_only_fields = ['ticket_code', 'user' 'created_at']
+        read_only_fields = ['ticket_code', 'user', 'created_at']
 
     def validate(self, attrs):
         space = attrs.get('space')
