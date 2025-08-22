@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: spotly-backend
+    env: python
+    buildCommand: "cd django-app && pip install -r requirements.txt && python3 manage.py makemigrations && python3 manage.py migrate && python3 manage.py collectstatic --noinput"
+    startCommand: "cd django-app && gunicorn spotly.wsgi:application"
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*.onrender.com"
+      - key: GOOGLE_OAUTH2_REDIRECT_URI
+        value: "https://spotly-backend.onrender.com/auth/google/callback/"
+
+databases:
+  - name: spotly-db
+    databaseName: spotly
+    user: spotly_user
