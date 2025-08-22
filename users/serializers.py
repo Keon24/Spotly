@@ -14,7 +14,7 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "email", "username", "first_name", "last_name"]
+        fields = ["id", "email", "first_name", "last_name"]
 
 # Register serializer to handle user creation
 class RegisterSerializer(serializers.ModelSerializer):
@@ -25,7 +25,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "username", "first_name", "last_name", "password","password2",]
+        fields = ["id", "email", "first_name", "last_name", "password","password2",]
         
     # Here we take the data form JSON and compare passwords to see if they match
     def validate(self,attrs):
