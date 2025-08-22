@@ -123,6 +123,7 @@ GOOGLE_OAUTH2_REDIRECT_URI = os.getenv("GOOGLE_OAUTH2_REDIRECT_URI", "http://loc
 # ✅ CORS HEADERS
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React frontend
+    "https://spotly-pi.vercel.app",  # Vercel deployment
 ]
 
 CORS_ALLOW_CREDENTIALS = True
