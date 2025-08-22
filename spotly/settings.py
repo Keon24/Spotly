@@ -126,7 +126,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React frontend
     "https://spotly-frontend.vercel.app",  # Vercel production
     "https://spotly-frontend-git-main-keon24s-projects.vercel.app",  # Vercel git branch
-    "https://spotly-frontend-3cqsgz1jw-keon24s-projects.vercel.app",  # Vercel preview
+    "https://spotly-frontend-5s5di21f9-keon24s-projects.vercel.app",  # Vercel preview
 ]
 
 CORS_ALLOW_CREDENTIALS = True
