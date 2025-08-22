@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key")
-DEBUG = os.getenv("DEBUG", "False") == "True"
+DEBUG = True  # Temporarily enable for debugging
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost").split(",")
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS]
 
