@@ -30,7 +30,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     # Here we take the data form JSON and compare passwords to see if they match
     def validate(self,attrs):
        if attrs["password"] != attrs["password2"]:
-           raise serializers.ValidationError({"message:","passswords do not match"})
+           raise serializers.ValidationError({"message": "passwords do not match"})
        #captcha_token = attrs.pop("captcha")
        #response = requests.post("https://www.google.com/recaptcha/api/siteverify",
        ##data={
