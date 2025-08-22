@@ -2,6 +2,9 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
+from django.conf import settings
+import requests
 
 # note similar to nodejs validator
 # Get custom user model
@@ -18,15 +21,27 @@ class RegisterSerializer(serializers.ModelSerializer):
     # User is required to have matching passwords 
     password = serializers.CharField(write_only=True,validators=[validate_password])
     password2 = serializers.CharField(write_only =True)
+    #captcha = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ["id", "email", "username", "first_name", "last_name", "password","password2"]
+        fields = ["id", "email", "username", "first_name", "last_name", "password","password2",]
         
     # Here we take the data form JSON and compare passwords to see if they match
     def validate(self,attrs):
        if attrs["password"] != attrs["password2"]:
            raise serializers.ValidationError({"message:","passswords do not match"})
+       #captcha_token = attrs.pop("captcha")
+       #response = requests.post("https://www.google.com/recaptcha/api/siteverify",
+       ##data={
+        #   "secret": settings.RECAPTCHA_SECRET_KEY,
+        #   "response": captcha_token,
+       #},                         
+                            
+        #)
+       #result = response.json()
+       #if not result.get('success'):
+           #raise serializers.ValidationError('captcha validation failed ')
        return attrs
     # Define a function to create and hash the password
     def create(self, validated_data):
@@ -46,12 +61,10 @@ class LoginSerializer(serializers.Serializer):
     def validate(self, data):
         email = data.get("email")
         password = data.get("password")      
-        try:   
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            raise serializers.ValidationError("Invalid email or password")
-    
-        if not user.check_password(password):
+        if not email or not password:
+            raise serializers.ValidationError('email and password are required')
+        user = authenticate(request=self.context.get("request"),username=email,password=password)  
+        if not user:
             raise serializers.ValidationError("invalid username or password")
         
         if not user.is_active:

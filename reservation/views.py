@@ -4,18 +4,22 @@ from .models import ParkingSpace
 from rest_framework.views import APIView 
 from rest_framework.response import Response 
 from rest_framework import status
-from .serializers import ReservationSerializer
+from .serializers import ReservationSerializer, ReservationReadSerializer
 from django.utils import timezone 
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.utils.dateparse import parse_date
 import logging
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 import pprint
 
 logger = logging.getLogger(__name__)
 
 class ReservationLotView(APIView):
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
     def post(self, request):
         reserve_lot = ReservationSerializer(data=request.data, context={'request':request})
         if reserve_lot.is_valid():
@@ -42,7 +46,7 @@ class ReservationLotView(APIView):
                             status=status.HTTP_409_CONFLICT
                         )
 
-                    reserve_lot.save(user=request.user)
+                    reserve_lot.save()
                     logger.info(f"User {request.user} reserve lot {space.id} for {reserve_date}")
                     return Response(
                         {
@@ -78,7 +82,7 @@ class ReservationLotView(APIView):
                 soft_delete__isnull=True
             )
 
-        serialized = ReservationSerializer(get_reservation, many=True)
+        serialized = ReservationReadSerializer(get_reservation, many=True)
         return Response(serialized.data, status=status.HTTP_200_OK)
 
 
@@ -102,19 +106,23 @@ class ReservationDateView(APIView):
 
 class ReservationDeleteView(APIView):
     def post(self, request, pk):
-        reserve_cancel = get_object_or_404(ReservationLot, pk=pk)
+        reserve_cancel = get_object_or_404(
+            ReservationLot, 
+            pk=pk, 
+            user=request.user, 
+            soft_delete__isnull=True
+        )
         
-        if not reserve_cancel.is_active:
-            return Response({'message': 'Reservation is already canceled'}, status=status.HTTP_404_NOT_FOUND)
-
-        # soft delete 
-        reserve_cancel.is_active = False 
+        # soft delete by setting timestamp
+        reserve_cancel.soft_delete = timezone.now()
         reserve_cancel.save()
         
-        return Response({'message': 'Reservation Approved'}, status=status.HTTP_200_OK) 
+        return Response({'message': 'Reservation cancelled successfully'}, status=status.HTTP_200_OK) 
 
 
 class AvailableView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
     def get(self, request):
         # Get the date from query parameters (?date=YYYY-MM-DD)
         date_str = request.GET.get('date')
@@ -144,7 +152,8 @@ class AvailableView(APIView):
 
         if not available_spots.exists():
             # Format the response data with the lot info you want to return
-            return Response({'message': 'reservation occupied choose another a date'}, status=400)
+            return Response({'available_spots':[]}, status=200)
 
         # Return the available lots with a 200 OK response
         return Response({'available_spots': list(available_spots.values())}, status=200)
+   

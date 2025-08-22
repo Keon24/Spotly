@@ -1,9 +1,14 @@
 Django
 djangorestframework
 psycopg2-binary
-djangorestframework
 djangorestframework-simplejwt
 dj-rest-auth
 django-allauth
 social-auth-app-django
 requests
+django-cors-headers
+dj-database-url
+python-decouple
+gunicorn
+whitenoise
+
