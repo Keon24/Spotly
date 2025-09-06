@@ -32,11 +32,29 @@ class LoginView(APIView):
             access_token = data['access_token']
             refresh_token = data['token']
 
-            response = Response(user_data, status=status.HTTP_200_OK)
-
-            response.set_cookie('access_token', access_token, httponly=True, samesite='Lax', secure=False)
-            response.set_cookie('refresh_token', refresh_token, httponly=True, samesite='Lax', secure=False)
-
+            response = Response({
+                'user': user_data,
+                'message': 'Login successful'
+            }, status=status.HTTP_200_OK)
+            
+            # Set HTTP-only cookies for authentication
+            response.set_cookie(
+                'access_token',
+                access_token,
+                max_age=30*60,  # 30 minutes
+                httponly=True,
+                secure=True,  # HTTPS only
+                samesite='None'  # Cross-origin cookies
+            )
+            response.set_cookie(
+                'refresh_token', 
+                refresh_token,
+                max_age=7*24*60*60,  # 7 days
+                httponly=True,
+                secure=True,
+                samesite='None'
+            )
+            
             return response
 
         return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
@@ -44,7 +62,6 @@ class LoginView(APIView):
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
-    authentication_classes = [CookieJWTAuthentication]  
     renderer_classes = [JSONRenderer]  
 
     def get(self, request):
