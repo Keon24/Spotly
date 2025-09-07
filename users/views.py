@@ -40,8 +40,10 @@ class LoginView(APIView):
             }, status=status.HTTP_200_OK)
             
             # Set HTTP-only cookies for authentication
-            response.set_cookie('access_token', access_token, httponly=True, samesite='Lax', secure=False)
-            response.set_cookie('refresh_token', refresh_token, httponly=True, samesite='Lax', secure=False)
+            from django.conf import settings
+            is_secure = not settings.DEBUG  # Use secure cookies in production
+            response.set_cookie('access_token', access_token, httponly=True, samesite='None' if is_secure else 'Lax', secure=is_secure)
+            response.set_cookie('refresh_token', refresh_token, httponly=True, samesite='None' if is_secure else 'Lax', secure=is_secure)
             
             return response
 
@@ -49,6 +51,7 @@ class LoginView(APIView):
 
 
 class UserProfileView(APIView):
+    authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]  
 
