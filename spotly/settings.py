@@ -127,6 +127,12 @@ CORS_ALLOWED_ORIGINS = [
     "https://spotly-frontend.vercel.app",  # Vercel production
     "https://spotly-frontend-git-main-keon24s-projects.vercel.app",  # Vercel git branch
     "https://spotly-frontend-5s5di21f9-keon24s-projects.vercel.app",  # Vercel preview
+    "https://spotly-frontend-68l3tdli4-keon24s-projects.vercel.app",  # New Vercel preview
+]
+
+# Allow all Vercel preview domains
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://spotly-frontend-[a-zA-Z0-9]+-keon24s-projects\.vercel\.app$",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
