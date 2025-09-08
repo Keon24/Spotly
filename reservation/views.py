@@ -140,7 +140,7 @@ class AvailableView(APIView):
         # Only include reservations that are not soft-deleted
         # Extract the lot IDs from these reservations
         reserved_lots = ReservationLot.objects.filter(
-            reserve_date=reserve_date,
+            reserve_date__date=reserve_date,
             soft_delete__isnull=True
         )    
         reserve_ids = reserved_lots.values_list('space_id', flat=True)
