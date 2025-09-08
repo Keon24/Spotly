@@ -21,6 +21,7 @@ class ReservationLotView(APIView):
             return [AllowAny()]
         return [IsAuthenticated()]
     def post(self, request):
+        logger.info(f"Received data: {request.data}")
         reserve_lot = ReservationSerializer(data=request.data, context={'request':request})
         if reserve_lot.is_valid():
             space = reserve_lot.validated_data.get('space')
@@ -63,6 +64,7 @@ class ReservationLotView(APIView):
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
+        logger.error(f"Validation errors: {reserve_lot.errors}")
         return Response(
             {'message': 'Reservation Failed', "data": reserve_lot.errors},
             status=status.HTTP_400_BAD_REQUEST
