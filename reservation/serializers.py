@@ -53,37 +53,38 @@ class ReservationSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         ticket_code = f"TICKET-{uuid.uuid4().hex[:8].upper()}"
         
-        # Handle integer space ID from frontend
-        space_data = validated_data.get('space')
-        if isinstance(space_data, int):
-            # Create minimal ParkingSpace object only when reservation is made
-            from parking.models import ParkingLot, ParkingSpace
-            
-            # Get or create a default parking lot
-            lot, _ = ParkingLot.objects.get_or_create(
-                name='Main Parking Lot',
-                defaults={'location': 'Downtown', 'total_spaces': 100}
-            )
-            
-            # Create minimal space object for this reservation
-            space, _ = ParkingSpace.objects.get_or_create(
-                id=space_data,
-                defaults={
-                    'lot': lot,
-                    'label': f'A{space_data:02d}',
-                    'is_occupied': False,
-                    'is_reserved': False,
-                    'sensor_id': f'sensor_{space_data}'
-                }
-            )
-            validated_data['space'] = space
+        # Get the space ID (should always be an integer from the serializer)
+        space_id = validated_data['space']  # This is an integer from frontend
+        
+        # Create minimal ParkingSpace object 
+        from parking.models import ParkingLot, ParkingSpace
+        
+        # Get or create a default parking lot
+        lot, _ = ParkingLot.objects.get_or_create(
+            name='Main Parking Lot',
+            defaults={'location': 'Downtown', 'total_spaces': 100}
+        )
+        
+        # Create minimal space object using the integer ID
+        space, _ = ParkingSpace.objects.get_or_create(
+            id=space_id,
+            defaults={
+                'lot': lot,
+                'label': f'A{space_id:02d}',
+                'is_occupied': False,
+                'is_reserved': False,
+                'sensor_id': f'sensor_{space_id}'
+            }
+        )
         
         from datetime import datetime
         from django.utils.timezone import make_aware
-        # Use timezone-aware sentinel value meaning "not deleted" to satisfy NOT NULL constraint
+        
+        # Create reservation - pass space object to space field, NOT space_id
         return ReservationLot.objects.create(
             user=user, 
+            space=space,  # Pass the actual ParkingSpace object
+            reserve_date=validated_data['reserve_date'],
             ticket_code=ticket_code, 
-            soft_delete=make_aware(datetime(1900, 1, 1)),  # Timezone-aware sentinel value
-            **validated_data
+            soft_delete=make_aware(datetime(1900, 1, 1))
         )
