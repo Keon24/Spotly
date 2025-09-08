@@ -31,15 +31,18 @@ class ReservationSerializer(serializers.ModelSerializer):
         # Handle integer space ID for dynamic spots
         space_id = space if isinstance(space, int) else space.id if space else None
         
+        from datetime import datetime
+        sentinel_date = datetime(1900, 1, 1)
+        
         # Check if space is already reserved at this exact time
-        if ReservationLot.objects.filter(space_id=space_id, reserve_date=reserve_date, soft_delete__isnull=True).exists():
+        if ReservationLot.objects.filter(space_id=space_id, reserve_date=reserve_date, soft_delete=sentinel_date).exists():
             raise serializers.ValidationError("This space is already reserved at that exact time.")
 
         # Check if user already has a reservation for this date (ignoring time)
         if ReservationLot.objects.filter(
             user=user, 
             reserve_date__date=reserve_date.date(), 
-            soft_delete__isnull=True
+            soft_delete=sentinel_date
         ).exists():
             raise serializers.ValidationError("You already have a reservation for this date. Only one reservation per day is allowed.")
 
@@ -74,9 +77,11 @@ class ReservationSerializer(serializers.ModelSerializer):
             )
             validated_data['space'] = space
         
+        from datetime import datetime
+        # Use year 1900 as sentinel value meaning "not deleted" to satisfy NOT NULL constraint
         return ReservationLot.objects.create(
             user=user, 
             ticket_code=ticket_code, 
-            soft_delete=None,  # Explicitly set to None for new reservations
+            soft_delete=datetime(1900, 1, 1),  # Sentinel value meaning "not deleted"
             **validated_data
         )

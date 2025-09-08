@@ -33,10 +33,12 @@ class ReservationLotView(APIView):
                     ReservationLot.objects.select_for_update().filter(space_id=space)
                     
                     # Check if theres already a reservation
+                    from datetime import datetime
+                    sentinel_date = datetime(1900, 1, 1)
                     exist = ReservationLot.objects.filter(
                         space_id=space,
                         reserve_date=reserve_date,
-                        soft_delete__isnull=True
+                        soft_delete=sentinel_date
                     ).exists()
                     
                     logger.warning(f"User{request.user} attempt to double book lot {space} for {reserve_date}")
@@ -85,10 +87,12 @@ class ReservationLotView(APIView):
             get_reservation = ReservationLot.objects.all()
         else:    
             # Regular users see only their upcoming, active reservations
+            from datetime import datetime
+            sentinel_date = datetime(1900, 1, 1)
             get_reservation = ReservationLot.objects.filter(
                 user=request.user, 
                 reserve_date__gt=now,
-                soft_delete__isnull=True
+                soft_delete=sentinel_date
             )
 
         serialized = ReservationReadSerializer(get_reservation, many=True)
@@ -115,11 +119,13 @@ class ReservationDateView(APIView):
 
 class ReservationDeleteView(APIView):
     def post(self, request, pk):
+        from datetime import datetime
+        sentinel_date = datetime(1900, 1, 1)
         reserve_cancel = get_object_or_404(
             ReservationLot, 
             pk=pk, 
             user=request.user, 
-            soft_delete__isnull=True
+            soft_delete=sentinel_date
         )
         
         # soft delete by setting timestamp
@@ -146,9 +152,11 @@ class AvailableView(APIView):
             return Response({"error": "Invalid date format"}, status=400)
 
         # Get reservations for that date to see which spots are taken
+        from datetime import datetime
+        sentinel_date = datetime(1900, 1, 1)
         reserved_lots = ReservationLot.objects.filter(
             reserve_date__date=reserve_date,
-            soft_delete__isnull=True
+            soft_delete=sentinel_date
         )
         reserved_space_ids = set(reserved_lots.values_list('space_id', flat=True))
 
