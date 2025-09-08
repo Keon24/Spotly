@@ -9,7 +9,7 @@ class ReservationLot(models.Model):
     ticket_code = models.CharField(max_length = 255, unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     reserve_date = models.DateTimeField()
-    soft_delete = models.DateTimeField(null=True, blank=True)
+    soft_delete = models.DateTimeField(null=True, blank=True, default=None)
     is_occupied = models.BooleanField(default=False)
     
    
