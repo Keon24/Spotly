@@ -15,8 +15,38 @@ class ReservationReadSerializer(serializers.ModelSerializer):
         model = ReservationLot
         fields = ['id', 'space', 'reserve_date', 'ticket_code', 'created_at']
 
+class DynamicParkingSpaceField(serializers.PrimaryKeyRelatedField):
+    def to_internal_value(self, data):
+        # Ensure ParkingSpace exists, create if needed
+        from parking.models import ParkingLot, ParkingSpace
+        
+        try:
+            space_id = int(data)
+        except (ValueError, TypeError):
+            self.fail('incorrect_type', data_type=type(data).__name__)
+        
+        # Get or create parking lot
+        lot, _ = ParkingLot.objects.get_or_create(
+            name='Main Parking Lot',
+            defaults={'location': 'Downtown', 'total_spaces': 100}
+        )
+        
+        # Get or create parking space
+        space, _ = ParkingSpace.objects.get_or_create(
+            id=space_id,
+            defaults={
+                'lot': lot,
+                'label': f'A{space_id:02d}',
+                'is_occupied': False,
+                'is_reserved': False,
+                'sensor_id': f'sensor_{space_id}'
+            }
+        )
+        return space
+
+
 class ReservationSerializer(serializers.ModelSerializer):
-    space = serializers.IntegerField()  # Accept integer space ID from frontend
+    space = DynamicParkingSpaceField(queryset=ParkingSpace.objects.all())
     
     class Meta:
         model = ReservationLot
@@ -24,19 +54,16 @@ class ReservationSerializer(serializers.ModelSerializer):
         read_only_fields = ['ticket_code', 'user', 'created_at']
 
     def validate(self, attrs):
-        space = attrs.get('space')
+        space = attrs.get('space')  # This is now a ParkingSpace object
         reserve_date = attrs.get('reserve_date')
         user = self.context['request'].user
-
-        # Handle integer space ID for dynamic spots
-        space_id = space if isinstance(space, int) else space.id if space else None
         
         from datetime import datetime
         from django.utils.timezone import make_aware
         sentinel_date = make_aware(datetime(1900, 1, 1))
         
         # Check if space is already reserved at this exact time
-        if ReservationLot.objects.filter(space_id=space_id, reserve_date=reserve_date, soft_delete=sentinel_date).exists():
+        if ReservationLot.objects.filter(space=space, reserve_date=reserve_date, soft_delete=sentinel_date).exists():
             raise serializers.ValidationError("This space is already reserved at that exact time.")
 
         # Check if user already has a reservation for this date (ignoring time)
@@ -53,38 +80,14 @@ class ReservationSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         ticket_code = f"TICKET-{uuid.uuid4().hex[:8].upper()}"
         
-        # Get the space ID (integer from frontend)
-        space_id = validated_data['space']
-        
-        # Ensure ParkingSpace exists (create minimal space if needed)
-        from parking.models import ParkingLot, ParkingSpace
-        
-        # Get or create a default parking lot
-        lot, _ = ParkingLot.objects.get_or_create(
-            name='Main Parking Lot',
-            defaults={'location': 'Downtown', 'total_spaces': 100}
-        )
-        
-        # Ensure space exists
-        ParkingSpace.objects.get_or_create(
-            id=space_id,
-            defaults={
-                'lot': lot,
-                'label': f'A{space_id:02d}',
-                'is_occupied': False,
-                'is_reserved': False,
-                'sensor_id': f'sensor_{space_id}'
-            }
-        )
-        
         from datetime import datetime
         from django.utils.timezone import make_aware
         
-        # Create reservation using space_id directly (ChatGPT's recommended approach #2)
+        # PrimaryKeyRelatedField already converted the ID to a ParkingSpace object
+        # Just create the reservation directly - no manual conversions needed
         return ReservationLot.objects.create(
             user=user, 
-            space_id=space_id,  # Pass the ID directly, not the object
-            reserve_date=validated_data['reserve_date'],
             ticket_code=ticket_code, 
-            soft_delete=make_aware(datetime(1900, 1, 1))
+            soft_delete=make_aware(datetime(1900, 1, 1)),
+            **validated_data  # Contains space (ParkingSpace object) and reserve_date
         )
