@@ -29,16 +29,16 @@ class ReservationLotView(APIView):
             try:    
                 # lock row
                 with transaction.atomic():
-                    ReservationLot.objects.select_for_update().filter(space=space)
+                    ReservationLot.objects.select_for_update().filter(space_id=space)
                     
                     # Check if theres already a reservation
                     exist = ReservationLot.objects.filter(
-                        space=space,
+                        space_id=space,
                         reserve_date=reserve_date,
                         soft_delete__isnull=True
                     ).exists()
                     
-                    logger.warning(f"User{request.user} attempt to double book lot {space.id} for {reserve_date}")
+                    logger.warning(f"User{request.user} attempt to double book lot {space} for {reserve_date}")
                     
                     if exist:
                         return Response(
@@ -47,7 +47,7 @@ class ReservationLotView(APIView):
                         )
 
                     reserve_lot.save()
-                    logger.info(f"User {request.user} reserve lot {space.id} for {reserve_date}")
+                    logger.info(f"User {request.user} reserve lot {space} for {reserve_date}")
                     return Response(
                         {
                             "Message": "Parking Reservation Confirmed",
