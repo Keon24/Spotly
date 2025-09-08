@@ -27,21 +27,24 @@ class ReservationLotView(APIView):
             space = reserve_lot.validated_data.get('space')
             reserve_date = reserve_lot.validated_data.get('reserve_date')
             
+            # Get space_id whether space is an integer or ParkingSpace object
+            space_id = space.id if hasattr(space, 'id') else space
+            
             try:    
                 # lock row
                 with transaction.atomic():
-                    ReservationLot.objects.select_for_update().filter(space_id=space)
+                    ReservationLot.objects.select_for_update().filter(space_id=space_id)
                     
                     # Check if theres already a reservation
                     from datetime import datetime
                     sentinel_date = datetime(1900, 1, 1)
                     exist = ReservationLot.objects.filter(
-                        space_id=space,
+                        space_id=space_id,
                         reserve_date=reserve_date,
                         soft_delete=sentinel_date
                     ).exists()
                     
-                    logger.warning(f"User{request.user} attempt to double book lot {space} for {reserve_date}")
+                    logger.warning(f"User{request.user} attempt to double book lot {space_id} for {reserve_date}")
                     
                     if exist:
                         return Response(
@@ -50,7 +53,7 @@ class ReservationLotView(APIView):
                         )
 
                     reserve_lot.save()
-                    logger.info(f"User {request.user} reserve lot {space} for {reserve_date}")
+                    logger.info(f"User {request.user} reserve lot {space_id} for {reserve_date}")
                     return Response(
                         {
                             "Message": "Parking Reservation Confirmed",
