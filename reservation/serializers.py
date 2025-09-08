@@ -32,7 +32,8 @@ class ReservationSerializer(serializers.ModelSerializer):
         space_id = space if isinstance(space, int) else space.id if space else None
         
         from datetime import datetime
-        sentinel_date = datetime(1900, 1, 1)
+        from django.utils.timezone import make_aware
+        sentinel_date = make_aware(datetime(1900, 1, 1))
         
         # Check if space is already reserved at this exact time
         if ReservationLot.objects.filter(space_id=space_id, reserve_date=reserve_date, soft_delete=sentinel_date).exists():
@@ -78,10 +79,11 @@ class ReservationSerializer(serializers.ModelSerializer):
             validated_data['space'] = space
         
         from datetime import datetime
-        # Use year 1900 as sentinel value meaning "not deleted" to satisfy NOT NULL constraint
+        from django.utils.timezone import make_aware
+        # Use timezone-aware sentinel value meaning "not deleted" to satisfy NOT NULL constraint
         return ReservationLot.objects.create(
             user=user, 
             ticket_code=ticket_code, 
-            soft_delete=datetime(1900, 1, 1),  # Sentinel value meaning "not deleted"
+            soft_delete=make_aware(datetime(1900, 1, 1)),  # Timezone-aware sentinel value
             **validated_data
         )

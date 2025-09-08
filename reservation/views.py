@@ -37,7 +37,8 @@ class ReservationLotView(APIView):
                     
                     # Check if theres already a reservation
                     from datetime import datetime
-                    sentinel_date = datetime(1900, 1, 1)
+                    from django.utils.timezone import make_aware
+                    sentinel_date = make_aware(datetime(1900, 1, 1))
                     exist = ReservationLot.objects.filter(
                         space_id=space_id,
                         reserve_date=reserve_date,
@@ -91,7 +92,8 @@ class ReservationLotView(APIView):
         else:    
             # Regular users see only their upcoming, active reservations
             from datetime import datetime
-            sentinel_date = datetime(1900, 1, 1)
+            from django.utils.timezone import make_aware
+            sentinel_date = make_aware(datetime(1900, 1, 1))
             get_reservation = ReservationLot.objects.filter(
                 user=request.user, 
                 reserve_date__gt=now,
@@ -123,7 +125,8 @@ class ReservationDateView(APIView):
 class ReservationDeleteView(APIView):
     def post(self, request, pk):
         from datetime import datetime
-        sentinel_date = datetime(1900, 1, 1)
+        from django.utils.timezone import make_aware
+        sentinel_date = make_aware(datetime(1900, 1, 1))
         reserve_cancel = get_object_or_404(
             ReservationLot, 
             pk=pk, 
@@ -156,7 +159,8 @@ class AvailableView(APIView):
 
         # Get reservations for that date to see which spots are taken
         from datetime import datetime
-        sentinel_date = datetime(1900, 1, 1)
+        from django.utils.timezone import make_aware
+        sentinel_date = make_aware(datetime(1900, 1, 1))
         reserved_lots = ReservationLot.objects.filter(
             reserve_date__date=reserve_date,
             soft_delete=sentinel_date
