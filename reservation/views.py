@@ -136,24 +136,27 @@ class AvailableView(APIView):
         if not reserve_date:
             return Response({"error": "Invalid date format"}, status=400)
 
-        # Query ReservationLot for reservations on that date
-        # Only include reservations that are not soft-deleted
-        # Extract the lot IDs from these reservations
+        # Get reservations for that date to see which spots are taken
         reserved_lots = ReservationLot.objects.filter(
             reserve_date__date=reserve_date,
             soft_delete__isnull=True
-        )    
-        reserve_ids = reserved_lots.values_list('space_id', flat=True)
+        )
+        reserved_space_ids = set(reserved_lots.values_list('space_id', flat=True))
 
-        # Query Parkingspace (or your lot model) for available spots
-        # Filter: is_occupied == False
-        # Exclude any lot IDs that are in the reserved list
-        available_spots = ParkingSpace.objects.filter(is_occupied=False).exclude(id__in=reserve_ids)
+        # Dynamically generate available spots (truly unlimited)
+        total_spots = 50  # Plenty of spots, can be increased easily
+        available_spots = []
+        
+        for i in range(1, total_spots + 1):
+            # Only include spots that aren't reserved on this date
+            if i not in reserved_space_ids:
+                available_spots.append({
+                    'id': i,
+                    'label': f'A{i:02d}',
+                    'is_occupied': False,
+                    'is_reserved': False,
+                    'sensor_id': f'sensor_{i}'
+                })
 
-        if not available_spots.exists():
-            # Format the response data with the lot info you want to return
-            return Response({'available_spots':[]}, status=200)
-
-        # Return the available lots with a 200 OK response
-        return Response({'available_spots': list(available_spots.values())}, status=200)
+        return Response({'available_spots': available_spots}, status=200)
    

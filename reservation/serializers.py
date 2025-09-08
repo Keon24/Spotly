@@ -26,8 +26,11 @@ class ReservationSerializer(serializers.ModelSerializer):
         reserve_date = attrs.get('reserve_date')
         user = self.context['request'].user
 
+        # Handle integer space ID for dynamic spots
+        space_id = space if isinstance(space, int) else space.id if space else None
+        
         # Check if space is already reserved at this exact time
-        if ReservationLot.objects.filter(space=space, reserve_date=reserve_date, soft_delete__isnull=True).exists():
+        if ReservationLot.objects.filter(space_id=space_id, reserve_date=reserve_date, soft_delete__isnull=True).exists():
             raise serializers.ValidationError("This space is already reserved at that exact time.")
 
         # Check if user already has a reservation for this date (ignoring time)
@@ -43,4 +46,30 @@ class ReservationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         ticket_code = f"TICKET-{uuid.uuid4().hex[:8].upper()}"
+        
+        # Handle integer space ID from frontend
+        space_data = validated_data.get('space')
+        if isinstance(space_data, int):
+            # Create minimal ParkingSpace object only when reservation is made
+            from parking.models import ParkingLot, ParkingSpace
+            
+            # Get or create a default parking lot
+            lot, _ = ParkingLot.objects.get_or_create(
+                name='Main Parking Lot',
+                defaults={'location': 'Downtown', 'total_spaces': 100}
+            )
+            
+            # Create minimal space object for this reservation
+            space, _ = ParkingSpace.objects.get_or_create(
+                id=space_data,
+                defaults={
+                    'lot': lot,
+                    'label': f'A{space_data:02d}',
+                    'is_occupied': False,
+                    'is_reserved': False,
+                    'sensor_id': f'sensor_{space_data}'
+                }
+            )
+            validated_data['space'] = space
+        
         return ReservationLot.objects.create(user=user, ticket_code=ticket_code, **validated_data)
