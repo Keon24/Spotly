@@ -16,6 +16,8 @@ class ReservationReadSerializer(serializers.ModelSerializer):
         fields = ['id', 'space', 'reserve_date', 'ticket_code', 'created_at']
 
 class ReservationSerializer(serializers.ModelSerializer):
+    space = serializers.IntegerField()  # Accept integer space ID from frontend
+    
     class Meta:
         model = ReservationLot
         fields = ['space', 'reserve_date']
