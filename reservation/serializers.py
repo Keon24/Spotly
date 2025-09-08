@@ -53,10 +53,10 @@ class ReservationSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         ticket_code = f"TICKET-{uuid.uuid4().hex[:8].upper()}"
         
-        # Get the space ID (should always be an integer from the serializer)
-        space_id = validated_data['space']  # This is an integer from frontend
+        # Get the space ID (integer from frontend)
+        space_id = validated_data['space']
         
-        # Create minimal ParkingSpace object 
+        # Ensure ParkingSpace exists (create minimal space if needed)
         from parking.models import ParkingLot, ParkingSpace
         
         # Get or create a default parking lot
@@ -65,8 +65,8 @@ class ReservationSerializer(serializers.ModelSerializer):
             defaults={'location': 'Downtown', 'total_spaces': 100}
         )
         
-        # Create minimal space object using the integer ID
-        space, _ = ParkingSpace.objects.get_or_create(
+        # Ensure space exists
+        ParkingSpace.objects.get_or_create(
             id=space_id,
             defaults={
                 'lot': lot,
@@ -80,10 +80,10 @@ class ReservationSerializer(serializers.ModelSerializer):
         from datetime import datetime
         from django.utils.timezone import make_aware
         
-        # Create reservation - pass space object to space field, NOT space_id
+        # Create reservation using space_id directly (ChatGPT's recommended approach #2)
         return ReservationLot.objects.create(
             user=user, 
-            space=space,  # Pass the actual ParkingSpace object
+            space_id=space_id,  # Pass the ID directly, not the object
             reserve_date=validated_data['reserve_date'],
             ticket_code=ticket_code, 
             soft_delete=make_aware(datetime(1900, 1, 1))
