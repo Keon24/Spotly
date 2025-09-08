@@ -7,7 +7,7 @@ from rest_framework import status
 from .serializers import ReservationSerializer, ReservationReadSerializer
 from django.utils import timezone 
 from django.shortcuts import get_object_or_404
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.utils.dateparse import parse_date
 import logging
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -56,6 +56,13 @@ class ReservationLotView(APIView):
                         },
                         status=status.HTTP_201_CREATED
                     )
+            except IntegrityError as e:
+                logging.error(f'Reservation failed for user{request.user}:{str(e)}')
+                logger.warning(f"Invalid reservation by user{request.user}:{reserve_lot.errors}")
+                return Response(
+                    {'message': 'Database constraint error - unable to create reservation', "error": "This space may already be reserved"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             except Exception as e:
                 logging.error(f'Reservation failed for user{request.user}:{str(e)}')
                 logger.warning(f"Invalid reservation by user{request.user}:{reserve_lot.errors}")

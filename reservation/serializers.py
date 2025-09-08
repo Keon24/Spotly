@@ -74,4 +74,9 @@ class ReservationSerializer(serializers.ModelSerializer):
             )
             validated_data['space'] = space
         
-        return ReservationLot.objects.create(user=user, ticket_code=ticket_code, **validated_data)
+        return ReservationLot.objects.create(
+            user=user, 
+            ticket_code=ticket_code, 
+            soft_delete=None,  # Explicitly set to None for new reservations
+            **validated_data
+        )
