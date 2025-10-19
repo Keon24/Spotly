@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import redirect
 from django.contrib.auth import login
 from django.http import HttpResponseBadRequest, JsonResponse
+from rest_framework_simplejwt.tokens import RefreshToken
 
 logger = logging.getLogger(__name__)
 
@@ -104,11 +105,20 @@ def google_callback(request):
             user.last_name = last_name or ''
             user.save()
 
-        login(request, user)
+        # Generate JWT tokens for the user
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+
         logger.info(f"User {email} logged in successfully via Google OAuth")
 
-        # Redirect to frontend dashboard after successful login
-        return redirect('https://spotly-frontend-git-main-keon24s-projects.vercel.app/dashboard')
+        # Redirect to frontend with tokens in URL parameters
+        redirect_url = (
+            f"https://spotly-frontend-git-main-keon24s-projects.vercel.app/auth/callback"
+            f"?access_token={access_token}"
+            f"&refresh_token={refresh_token}"
+        )
+        return redirect(redirect_url)
 
     except Exception as e:
         logger.exception(f"Google OAuth callback error: {str(e)}")
