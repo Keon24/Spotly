@@ -41,13 +41,11 @@ def google_callback(request):
     token_response = requests.post(
         token_endpoint,
         data={
-            "client_id": settings. GOOGLE_OAUTH2_CLIENT_ID,
-            "client_secret": settings.GOOGLE_OAUTH2_SECRET_KEY,
-
-            "code":code,
-            "grant_type":"authorization_code",
-            "redirect_uri":settings.GOOGLE_OAUTH2_REDIRECT_URI
-             
+            "client_id": settings.GOOGLE_OAUTH2_CLIENT_ID,
+            "client_secret": settings.GOOGLE_OAUTH2_CLIENT_SECRET,
+            "code": code,
+            "grant_type": "authorization_code",
+            "redirect_uri": settings.GOOGLE_OAUTH2_REDIRECT_URI
         }
     )
     
@@ -75,11 +73,21 @@ def google_callback(request):
     email = data.get("email")
     first_name = data.get("given_name")
     last_name = data.get ('family_name')
-    # get or create user in Django in databse 
-    user, _ = User.objects.get_or_create(email=email)
-    user.first_name = first_name
-    user.last_name = last_name
-    user.save() 
+    # get or create user in Django database
+    user, created = User.objects.get_or_create(
+        email=email,
+        defaults={
+            'first_name': first_name,
+            'last_name': last_name,
+            'is_active': True
+        }
+    )
+    # Update user info if already exists
+    if not created:
+        user.first_name = first_name
+        user.last_name = last_name
+        user.save() 
     
-    login(request,user)
-    return redirect('/')
+    login(request, user)
+    # Redirect to frontend dashboard after successful login
+    return redirect('https://spotly-frontend-git-main-keon24s-projects.vercel.app/dashboard')
